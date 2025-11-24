@@ -3,221 +3,203 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kemahiran Pemulihan: Operasi Darab & Bahagi (Pembelajaran)</title>
+  <title>Matematik Ceria: Darab & Bahagi</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
   <style>
-    body { box-sizing: border-box; }
-    .activity-card { min-height: 400px; }
-    .number-card { transition: all .3s ease; cursor: pointer; }
-    .number-card:hover { transform: scale(1.05); }
-    .dragging { opacity: .5; transform: rotate(5deg); }
-
-    /* (Gaya sedia ada anda dikekalkan) */
-    .drop-zone {
-      border: 2px dashed #cbd5e1;
-      transition: all .3s ease;
-      min-width: 60px;
-      min-height: 60px;
-      display: inline-block;
-      vertical-align: middle;
+    /* --- UI STYLE (TEMA HIJAU FRESH) --- */
+    body { 
+        font-family: 'Fredoka', sans-serif; 
+        background-color: #f0fdf4; /* Hijau Mint */
+        background-image: radial-gradient(#86efac 2px, transparent 2px); /* Bintik Hijau */
+        background-size: 30px 30px; 
     }
-    .drop-zone.drag-over { border-color: #3b82f6; background-color: #eff6ff; }
-
-    @keyframes shake {
-      0% { transform: translateX(0); } 25% { transform: translateX(-5px); }
-      50% { transform: translateX(5px); } 75% { transform: translateX(-5px); }
-      100% { transform: translateX(0); }
-    }
-    .shake { animation: shake 0.5s ease; }
-    .drop-zone-filled {
-      border-style: solid; border-color: #4ade80; background-color: #f0fdf4;
-    }
+    .game-card { background: white; border: 4px solid #475569; box-shadow: 8px 8px 0px #00000020; border-radius: 1.5rem; transition: transform 0.2s; min-height: 550px;}
     
-    /* Pinggan untuk Aktiviti 2 */
+    /* Buttons */
+    .btn-3d { transition: all 0.1s; border-bottom-width: 6px; border-color: rgba(0,0,0,0.2); transform: translateY(0); cursor: pointer; display: inline-block; }
+    .btn-3d:active:not(:disabled) { transform: translateY(4px); border-bottom-width: 2px; box-shadow: none; }
+    .btn-3d:disabled { opacity: 0.6; cursor: not-allowed; border-bottom-width: 6px; filter: grayscale(100%); }
+
+    /* Animation */
+    .shake { animation: shake 0.4s ease-in-out; border-color: #ef4444 !important; background-color: #fee2e2 !important; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px) rotate(-5deg); } 75% { transform: translateX(8px) rotate(5deg); } }
+
+    /* --- KHUSUS UNTUK DARAB & BAHAGI --- */
+    
+    /* Aktiviti 2: Pinggan & Epal */
     .pinggan {
       width: 100px; height: 100px;
-      background-color: #f1f5f9; border: 2px solid #94a3b8;
+      background-color: #f1f5f9; border: 4px solid #cbd5e1;
       border-radius: 50%;
       display: flex; flex-wrap: wrap;
       align-items: center; justify-content: center;
-      padding: 10px;
-      font-size: 20px;
-      transition: all .3s ease;
+      padding: 10px; margin: 5px;
+      box-shadow: inset 0 4px 6px rgba(0,0,0,0.1);
     }
-    /* Epal untuk Aktiviti 2 */
-    .epal {
-      display: inline-block;
-      animation: fadeIn 0.5s ease;
+    .epal { 
+      display: inline-block; font-size: 1.5rem; 
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.5); }
-      to { opacity: 1; transform: scale(1); }
+    @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+    /* Aktiviti 3 & 4: Input Cerita */
+    .story-select {
+      font-family: inherit; font-size: 1.1rem; font-weight: bold;
+      color: #475569; border: 3px solid #cbd5e1; border-radius: 0.75rem;
+      padding: 0.25rem 0.5rem; background-color: white; cursor: pointer;
+      transition: all 0.2s;
     }
-    
-    /* Input/Select untuk Aktiviti 3 & 4 */
-    .story-input {
-      font-size: 1.125rem;
-      padding: 0.5rem 1rem;
-      border: 2px solid #cbd5e1;
-      border-radius: 0.5rem;
-      background-color: #f8fafc;
-      margin: 0 0.25rem;
-    }
-    
+    .story-select:hover { border-color: #3b82f6; }
+    .story-num { font-size: 1.2rem; font-weight: 900; color: #ef4444; padding: 0 4px; }
+
+    /* Aktiviti 5: Jadual */
+    .table-row-hidden { opacity: 0; transform: translateY(10px); }
+    .table-row-visible { opacity: 1; transform: translateY(0); transition: all 0.5s ease; }
+
   </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-full">
+<body class="min-h-screen text-slate-800 pb-10">
 
-  <div class="bg-yellow-100 border-b-4 border-yellow-300 p-4 shadow-sm sticky top-0 z-10">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
+  <div class="fixed top-4 left-0 right-0 z-50 px-4 pointer-events-none">
+    <div class="max-w-4xl mx-auto bg-emerald-400 border-4 border-emerald-600 rounded-full px-6 py-3 shadow-xl flex items-center justify-between pointer-events-auto transform hover:scale-[1.01] transition-transform">
       <div class="flex items-center gap-3">
-        <span class="text-2xl">📚</span>
-        <span id="info-text" class="text-lg font-semibold text-gray-800">
-          Pilih aktiviti untuk mula belajar darab dan bahagi!
-        </span>
+        <span class="text-3xl animate-bounce">➗✖️</span>
+        <span id="info-text" class="text-xl font-bold text-emerald-900 leading-none mt-1">Jom belajar Darab & Bahagi!</span>
       </div>
-      <button id="speak-btn"
-              class="bg-yellow-300 hover:bg-yellow-400 text-yellow-800 font-bold py-2 px-4 rounded-full text-xl transition-colors duration-200"
-              onclick="speakInfo()">
-        🔊
-      </button>
+      <button id="speak-btn" onclick="speakInfo()" class="bg-white hover:bg-emerald-50 text-emerald-600 border-2 border-emerald-200 rounded-full p-2 transition-colors shadow-sm">🔊</button>
     </div>
   </div>
+  <div class="h-24"></div>
 
-  <div class="max-w-6xl mx-auto p-6">
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 activity-card flex items-center justify-center">
-      <div id="activity-content" class="text-center w-full">
-        <div class="py-16">
-          <div class="text-6xl mb-4">➗✖️</div>
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">
-            Kemahiran Pemulihan: Operasi Darab & Bahagi
-          </h2>
-          <p class="text-xl text-gray-600 mb-8">
-            Pilih aktiviti di bawah untuk meneroka konsep darab dan bahagi.
-          </p>
-          <div class="text-4xl">👇</div>
+  <div class="max-w-6xl mx-auto p-4">
+    
+    <div class="game-card p-8 mb-8 flex items-center justify-center relative">
+        <div id="activity-content" class="w-full relative z-10">
+            <div class="py-10 text-center">
+                <div class="text-8xl mb-6 animate-pulse">✖️➗</div>
+                <h2 class="text-5xl font-bold text-emerald-600 mb-4">Darab & Bahagi</h2>
+                <p class="text-2xl text-slate-500 mb-8 font-semibold">Pilih aktiviti di bawah untuk mula meneroka!</p>
+                <div class="text-4xl animate-bounce">👇</div>
+            </div>
         </div>
-      </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-lg p-6">
-      <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Pilih Aktiviti</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <button onclick="loadActivity(1)"
-                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
-          🌳 Taman Ajaib (Darab)
-        </button>
-        <button onclick="loadActivity(2)"
-                class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
-          🍎 Jom Agih! (Bahagi)
-        </button>
-        <button onclick="loadActivity(3)"
-                class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
-          ✍️ Bina Cerita (Darab)
-        </button>
-        <button onclick="loadActivity(4)"
-                class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
-          ✍️ Bina Cerita (Bahagi)
-        </button>
-        <button onclick="loadActivity(5)"
-                class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
-          🍓 Eksplorasi Jadual
-        </button>
+    <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg p-6 border-2 border-white">
+      <h3 class="text-2xl font-bold text-slate-700 mb-4 text-center">🎮 Pilih Aktiviti</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <button onclick="loadActivity(1)" class="btn-3d bg-blue-500 text-white font-bold py-4 px-2 rounded-xl text-lg">🌳 Taman Ajaib</button>
+        <button onclick="loadActivity(2)" class="btn-3d bg-emerald-500 text-white font-bold py-4 px-2 rounded-xl text-lg">🍎 Jom Agih!</button>
+        <button onclick="loadActivity(3)" class="btn-3d bg-violet-500 text-white font-bold py-4 px-2 rounded-xl text-lg">✍️ Cerita Darab</button>
+        <button onclick="loadActivity(4)" class="btn-3d bg-orange-500 text-white font-bold py-4 px-2 rounded-xl text-lg">✍️ Cerita Bahagi</button>
+        <button onclick="loadActivity(5)" class="btn-3d bg-rose-500 text-white font-bold py-4 px-2 rounded-xl text-lg">🍓 Jadual Sifir</button>
       </div>
 
-      <div class="flex justify-center gap-4">
-        <button onclick="clearActivity()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg text-lg transition-colors duration-200">
-          🧹 Bersih
-        </button>
-        <button onclick="nextActivity()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg text-lg transition-colors duration-200">
-          ➡️ Seterusnya
-        </button>
+      <div class="flex justify-center gap-4 border-t-2 border-slate-100 pt-6">
+        <button onclick="clearActivity()" class="btn-3d bg-slate-400 text-white font-bold py-2 px-6 rounded-full text-lg">🏠 Menu</button>
+        <button onclick="nextActivity()" class="btn-3d bg-indigo-500 text-white font-bold py-2 px-8 rounded-full text-xl">Seterusnya ➡️</button>
       </div>
     </div>
   </div>
 
   <script>
+    /* --- STANDARD HELPERS --- */
     let currentActivity = 0;
     let ttsEnabled = false;
-    let currentInfo = "Pilih aktiviti untuk mula belajar darab dan bahagi!";
-    let draggedElement = null; // Dikekalkan jika perlu
+    let currentInfo = "Pilih aktiviti untuk mula.";
+    let jadualHari = 1; // State untuk Aktiviti 5
+
+    function triggerWin() { confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); }
     
-    // State untuk Aktiviti 5
-    let jadualHari = 1;
-
-    /* ====== TTS (Dikekalkan) ====== */
-    function speak(text) {
-      if (!ttsEnabled) return;
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      setTimeout(() => {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'ms-MY';
-        u.rate = 0.9; u.pitch = 1.05;
-        const voices = window.speechSynthesis.getVoices();
-        const ms = voices.find(v => v.lang === 'ms-MY' || v.lang?.startsWith('ms'));
-        if (ms) u.voice = ms;
-        window.speechSynthesis.speak(u);
-      }, 100);
+    function speak(text) { 
+        if (!ttsEnabled || !('speechSynthesis' in window)) return; 
+        window.speechSynthesis.cancel(); 
+        const u = new SpeechSynthesisUtterance(text); 
+        u.lang = 'ms-MY'; u.rate = 0.9; u.pitch = 1.1; 
+        const voices = window.speechSynthesis.getVoices(); 
+        const ms = voices.find(v => v.lang === 'ms-MY' || v.lang?.startsWith('ms')); 
+        if (ms) u.voice = ms; 
+        window.speechSynthesis.speak(u); 
     }
-    function setInfo(text) { currentInfo = text; document.getElementById('info-text').textContent = text; }
-    function speakInfo() {
-      if (!ttsEnabled) {
-        ttsEnabled = true;
-        const btn = document.getElementById('speak-btn');
-        btn.classList.add('bg-green-300', 'hover:bg-green-400');
-        btn.classList.remove('bg-yellow-300', 'hover:bg-yellow-400');
-      }
-      speak(currentInfo);
+    
+    function setInfo(text) { 
+        currentInfo = text; 
+        const infoEl = document.getElementById('info-text'); 
+        infoEl.style.opacity = 0; 
+        setTimeout(() => { infoEl.textContent = text; infoEl.style.opacity = 1; }, 200); 
+    }
+    
+    function speakInfo() { 
+        if (!ttsEnabled) { 
+            ttsEnabled = true; 
+            document.getElementById('speak-btn').classList.add('bg-emerald-100', 'text-emerald-600'); 
+        } 
+        speak(currentInfo); 
     }
 
-    /* ====== DnD helpers (Dikekalkan) ====== */
-    function dragStart(e) { draggedElement = e.target; e.target.classList.add('dragging'); }
-    function dragEnd(e) { e.target.classList.remove('dragging'); document.querySelectorAll('.drop-zone').forEach(z=>z.classList.remove('drag-over')); }
-    function allowDrop(e) { e.preventDefault(); if (e.currentTarget.classList.contains('drop-zone')) e.currentTarget.classList.add('drag-over'); }
-    function dragLeave(e) { if (e.currentTarget.classList.contains('drop-zone')) e.currentTarget.classList.remove('drag-over'); }
-
-    /* ====== Router (BARU) ====== */
+    /* --- ROUTER --- */
     function loadActivity(n) {
       currentActivity = n;
       const content = document.getElementById('activity-content');
-      if (n === 1) return loadTamanAjaib(content);
-      if (n === 2) return loadJomAgih(content);
-      if (n === 3) return loadPembinaCeritaDarab(content);
-      if (n === 4) return loadPembinaCeritaBahagi(content);
-      if (n === 5) return loadEksplorasiJadual(content);
+      content.style.opacity = 0;
+      setTimeout(() => {
+          if (n === 1) loadTamanAjaib(content);
+          if (n === 2) loadJomAgih(content);
+          if (n === 3) loadPembinaCeritaDarab(content);
+          if (n === 4) loadPembinaCeritaBahagi(content);
+          if (n === 5) loadEksplorasiJadual(content);
+          content.style.opacity = 1;
+      }, 200);
     }
+
+    function clearActivity() {
+        currentActivity = 0;
+        document.getElementById('activity-content').innerHTML = `<div class="py-10 text-center"><div class="text-8xl mb-6 animate-bounce">✖️➗</div><h2 class="text-5xl font-bold text-emerald-600 mb-4">Darab & Bahagi</h2><p class="text-2xl text-slate-500 mb-8 font-semibold">Pilih aktiviti untuk mula!</p></div>`;
+        setInfo("Pilih aktiviti untuk mula belajar.");
+    }
+    function nextActivity() { let next = currentActivity + 1; if (next > 5) next = 1; loadActivity(next); }
+
+    /* =========================================
+       LOGIK AKTIVITI
+       ========================================= */
 
     /* ====== Aktiviti 1: Taman Ajaib (Darab) ====== */
     function loadTamanAjaib(content) {
-      setInfo("Cuba masukkan bilangan buah dan bilangan hari, kemudian tekan 'Tanam!'");
+      setInfo("Masukkan nombor dan tekan Tanam.");
       content.innerHTML = `
-        <h3 class="text-2xl font-bold text-blue-600 mb-6">🌳 Taman Ajaib (Darab)</h3>
-        <p class="text-lg text-gray-700 mb-4">Aktiviti ini menunjukkan darab sebagai tambah berulang.</p>
-        <div class="flex flex-wrap justify-center items-center gap-4 mb-6">
-          <label class="text-lg font-semibold">Berapa biji buah (cth: 5):</label>
-          <input id="taman-buah" type="number" class="story-input w-24" value="5">
-          <label class="text-lg font-semibold">Berapa hari (cth: 4):</label>
-          <input id="taman-hari" type="number" class="story-input w-24" value="4">
-          <button onclick="runTamanAjaib()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-5 rounded-lg text-lg">
-            Tanam!
-          </button>
-        </div>
-        <div id="taman-display" class="mt-6 p-4 bg-blue-50 rounded-lg text-left text-xl font-semibold text-blue-800 min-h-48"
-             style="font-family: monospace;">
-          Klik 'Tanam!' untuk lihat hasilnya...
+        <h3 class="text-4xl font-bold text-blue-500 mb-6 text-center">🌳 Taman Ajaib (Darab)</h3>
+        <div class="bg-blue-50 rounded-3xl p-8 border-4 border-blue-200 max-w-2xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-6">
+                <div class="text-center">
+                    <label class="block font-bold text-blue-700 mb-1">Buah</label>
+                    <input id="taman-buah" type="number" class="text-2xl font-bold text-center w-20 p-2 rounded-xl border-2 border-blue-300" value="5">
+                </div>
+                <div class="text-4xl font-black text-blue-300">×</div>
+                <div class="text-center">
+                    <label class="block font-bold text-blue-700 mb-1">Hari</label>
+                    <input id="taman-hari" type="number" class="text-2xl font-bold text-center w-20 p-2 rounded-xl border-2 border-blue-300" value="4">
+                </div>
+                <button onclick="runTamanAjaib()" class="btn-3d bg-blue-500 text-white font-bold py-3 px-6 rounded-xl text-lg mt-4 md:mt-0">🌱 Tanam!</button>
+            </div>
+
+            <div id="taman-display" class="bg-white p-6 rounded-2xl border-2 border-blue-100 min-h-[200px] text-lg font-mono text-slate-600 leading-loose">
+                Tekan butang 'Tanam!' untuk melihat proses pendaraban.
+            </div>
         </div>
       `;
     }
 
-    function runTamanAjaib() {
+    window.runTamanAjaib = function() {
       const buah = parseInt(document.getElementById('taman-buah').value) || 0;
       const hari = parseInt(document.getElementById('taman-hari').value) || 0;
       const display = document.getElementById('taman-display');
       
-      if (buah === 0 || hari === 0 || buah > 20 || hari > 10) {
-        display.innerHTML = "Sila masukkan nombor yang munasabah (cth: buah 1-20, hari 1-10).";
-        setInfo("Sila masukkan nombor yang munasabah.");
+      if (buah <= 0 || hari <= 0 || buah > 10 || hari > 10) {
+        setInfo("Sila masukkan nombor kecil (1-10).");
+        display.innerHTML = "<span class='text-red-500 font-bold'>Sila guna nombor 1 hingga 10 sahaja.</span>";
         return;
       }
       
@@ -229,281 +211,209 @@
         setTimeout(() => {
           jumlah += buah;
           ayatTambah = (ayatTambah === "") ? `${buah}` : `${ayatTambah} + ${buah}`;
-          display.innerHTML += `Hari ${i}: ${ayatTambah} = <strong>${jumlah}</strong><br>`;
-        }, i * 700);
+          display.innerHTML += `<div>Hari ${i}: ${ayatTambah} = <strong class="text-blue-600 text-xl">${jumlah}</strong></div>`;
+        }, i * 800);
       }
       
       setTimeout(() => {
-        const msg = `Ini ialah ${hari} kumpulan, dengan ${buah} biji setiap satu. Ayat matematik: ${hari} x ${buah} = ${jumlah}.`;
-        display.innerHTML += `<hr class="my-3 border-blue-200">\n<strong>${msg}</strong>`;
-        setInfo(msg);
-        speak(msg);
-      }, (hari + 1) * 700);
+        const msg = `Selesai! ${hari} kumpulan x ${buah} biji = ${jumlah}.`;
+        display.innerHTML += `<div class="mt-4 pt-4 border-t-2 border-blue-100 font-bold text-blue-700 text-xl">${msg}</div>`;
+        setInfo(msg); speak(msg); triggerWin();
+      }, (hari + 1) * 800);
     }
 
     /* ====== Aktiviti 2: Jom Agih! (Bahagi) ====== */
     function loadJomAgih(content) {
-      setInfo("Cuba masukkan jumlah epal dan bilangan kawan, kemudian tekan 'Agihkan!'");
+      setInfo("Masukkan jumlah epal dan kawan, kemudian tekan Agihkan.");
       content.innerHTML = `
-        <h3 class="text-2xl font-bold text-green-600 mb-6">🍎 Jom Agih! (Bahagi)</h3>
-        <p class="text-lg text-gray-700 mb-4">Aktiviti ini menunjukkan bahagi sebagai pengagihan sama rata.</p>
-        <div class="flex flex-wrap justify-center items-center gap-4 mb-6">
-          <label class="text-lg font-semibold">Jumlah epal (cth: 12):</label>
-          <input id="agih-jumlah" type="number" class="story-input w-24" value="12">
-          <label class="text-lg font-semibold">Bilangan kawan (cth: 3):</label>
-          <input id="agih-kawan" type="number" class="story-input w-24" value="3">
-          <button onclick="runJomAgih()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-5 rounded-lg text-lg">
-            Agihkan!
-          </button>
-        </div>
-        <div class="mt-6 p-4 bg-green-50 rounded-lg min-h-48">
-          <h4 class="text-lg font-semibold text-green-800 mb-3">Pinggan Kawan-kawan:</h4>
-          <div id="agih-display" class="flex flex-wrap justify-center gap-4">
-            Klik 'Agihkan!' untuk mula...
-          </div>
-          <div id="agih-rumusan" class="mt-4 text-xl font-bold text-green-900"></div>
+        <h3 class="text-4xl font-bold text-emerald-500 mb-6 text-center">🍎 Jom Agih! (Bahagi)</h3>
+        <div class="bg-emerald-50 rounded-3xl p-8 border-4 border-emerald-200 max-w-3xl mx-auto text-center">
+            
+            <div class="flex justify-center items-center gap-4 mb-8">
+                <div>
+                    <label class="block font-bold text-emerald-700 text-sm">Epal</label>
+                    <input id="agih-jumlah" type="number" class="text-xl font-bold text-center w-20 p-2 rounded-xl border-2 border-emerald-300" value="12">
+                </div>
+                <div class="text-2xl font-black text-emerald-300">÷</div>
+                <div>
+                    <label class="block font-bold text-emerald-700 text-sm">Kawan</label>
+                    <input id="agih-kawan" type="number" class="text-xl font-bold text-center w-20 p-2 rounded-xl border-2 border-emerald-300" value="3">
+                </div>
+                <button onclick="runJomAgih()" class="btn-3d bg-emerald-500 text-white font-bold py-2 px-6 rounded-xl text-lg">Agihkan!</button>
+            </div>
+
+            <div id="agih-display" class="flex flex-wrap justify-center gap-4 min-h-[120px] mb-6"></div>
+            
+            <div id="agih-rumusan" class="text-xl font-bold text-emerald-800 min-h-[30px]"></div>
         </div>
       `;
     }
 
-    function runJomAgih() {
+    window.runJomAgih = function() {
       const jumlah = parseInt(document.getElementById('agih-jumlah').value) || 0;
       const kawan = parseInt(document.getElementById('agih-kawan').value) || 0;
       const display = document.getElementById('agih-display');
       const rumusan = document.getElementById('agih-rumusan');
       
-      if (jumlah === 0 || kawan === 0 || jumlah > 50 || kawan > 10 || jumlah % kawan !== 0) {
-        display.innerHTML = "Sila masukkan nombor yang munasabah dan boleh dibahagi sama rata (cth: 12 dan 3).";
-        rumusan.innerHTML = "";
-        setInfo("Sila masukkan nombor yang boleh dibahagi sama rata.");
+      if (jumlah <= 0 || kawan <= 0 || jumlah > 30 || kawan > 6 || jumlah % kawan !== 0) {
+        rumusan.innerHTML = "<span class='text-red-500'>Sila guna nombor kecil & boleh bahagi rata (cth: 12 ÷ 3).</span>";
         return;
       }
       
       display.innerHTML = "";
       rumusan.innerHTML = "";
       
-      // Cipta pinggan
+      // Buat pinggan
       for (let i = 0; i < kawan; i++) {
         display.innerHTML += `<div id="pinggan-${i}" class="pinggan"></div>`;
       }
       
-      // Agihkan epal satu per satu
+      // Agih epal
       for (let i = 0; i < jumlah; i++) {
         setTimeout(() => {
-          const pingganTarget = document.getElementById(`pinggan-${i % kawan}`);
-          pingganTarget.innerHTML += `<span class="epal">🍎</span>`;
+          const p = document.getElementById(`pinggan-${i % kawan}`);
+          p.innerHTML += `<span class="epal">🍎</span>`;
         }, (i + 1) * 200);
       }
       
       setTimeout(() => {
-        const setiapKawan = jumlah / kawan;
-        const msg = `Setiap ${kawan} kawan mendapat ${setiapKawan} biji epal. Ayat matematik: ${jumlah} ÷ ${kawan} = ${setiapKawan}.`;
+        const hasil = jumlah / kawan;
+        const msg = `Setiap kawan dapat ${hasil} biji epal. ( ${jumlah} ÷ ${kawan} = ${hasil} )`;
         rumusan.innerHTML = msg;
-        setInfo(msg);
-        speak(msg);
+        setInfo(msg); speak(msg); triggerWin();
       }, (jumlah + 2) * 200);
     }
-    
-    /* ====== Aktiviti 3: Pembina Cerita (Darab) ====== */
+
+    /* ====== Aktiviti 3: Pembina Cerita Darab ====== */
     function loadPembinaCeritaDarab(content) {
-      setInfo("Bina cerita anda untuk ayat matematik 4 x 5 = 20.");
+      setInfo("Pilih perkataan untuk bina cerita matematik.");
       content.innerHTML = `
-        <h3 class="text-2xl font-bold text-purple-600 mb-6">✍️ Pembina Cerita (Darab)</h3>
-        <div class="text-2xl font-bold p-4 bg-purple-100 border-2 border-purple-300 rounded-lg mb-6">
-          Ayat Matematik: <span class="text-purple-800">4 x 5 = 20</span>
-        </div>
-        <div class="text-lg leading-relaxed text-gray-800 mb-6">
-          Bina cerita anda: <br>
-          <select id="cerita-d-siapa" class="story-input">
-            <option value="Adam">Adam</option>
-            <option value="Fitri">Fitri</option>
-            <option value="Nik">Nik</option>
-          </select>
-          <select id="cerita-d-buat" class="story-input">
-            <option value="memetik">memetik</option>
-            <option value="menyusun">menyusun</option>
-            <option value="membeli">membeli</option>
-          </select>
-          <span class="font-bold text-purple-700">5</span>
-          <select id="cerita-d-apa" class="story-input">
-            <option value="biji rambutan">biji rambutan</option>
-            <option value="biji strawberi">biji strawberi</option>
-            <option value="batang pensel">batang pensel</option>
-          </select>
-          setiap hari selama <span class="font-bold text-purple-700">4</span> hari.
-        </div>
-        <button onclick="runBinaCeritaDarab()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-5 rounded-lg text-lg">
-          Papar Cerita!
-        </button>
-        <div id="cerita-d-hasil" class="mt-6 p-4 bg-purple-50 rounded-lg text-lg font-semibold text-purple-800 min-h-32">
-          Cerita anda akan muncul di sini...
+        <h3 class="text-4xl font-bold text-violet-500 mb-6 text-center">✍️ Cerita Darab</h3>
+        <div class="bg-violet-50 rounded-3xl p-8 border-4 border-violet-200 max-w-2xl mx-auto text-center">
+            <div class="bg-white p-4 rounded-xl border-2 border-violet-200 mb-6 inline-block shadow-sm">
+                <span class="text-2xl font-black text-violet-600">4 × 5 = 20</span>
+            </div>
+            
+            <div class="text-xl text-slate-700 leading-loose">
+                <select id="cd-siapa" class="story-select"><option>Adam</option><option>Siti</option><option>Ali</option></select>
+                <select id="cd-aksi" class="story-select"><option>membeli</option><option>mengumpul</option><option>melukis</option></select>
+                <span class="story-num">5</span>
+                <select id="cd-objek" class="story-select"><option>biji guli</option><option>buah epal</option><option>bintang</option></select>
+                setiap hari selama <span class="story-num">4</span> hari.
+            </div>
+            
+            <button onclick="runCeritaDarab()" class="btn-3d bg-violet-500 text-white font-bold py-3 px-8 rounded-xl text-lg mt-8">Bina Cerita</button>
+            
+            <div id="cd-hasil" class="mt-6 p-4 bg-white rounded-xl border-l-4 border-violet-400 text-left text-slate-600 italic min-h-[80px] hidden"></div>
         </div>
       `;
     }
-    
-    function runBinaCeritaDarab() {
-      const siapa = document.getElementById('cerita-d-siapa').value;
-      const buat = document.getElementById('cerita-d-buat').value;
-      const apa = document.getElementById('cerita-d-apa').value;
-      
-      const cerita = `Cerita Anda: <br>
-        <strong>${siapa}</strong> ${buat} <strong>5</strong> ${apa} setiap hari selama <strong>4</strong> hari.
-        <br>Berapakah jumlah ${apa} yang ${siapa} ada?
-        <br>Jawapan: 4 x 5 = 20. Jumlahnya ialah <strong>20</strong>.`;
+
+    window.runCeritaDarab = function() {
+        const s = document.getElementById('cd-siapa').value;
+        const a = document.getElementById('cd-aksi').value;
+        const o = document.getElementById('cd-objek').value;
         
-      document.getElementById('cerita-d-hasil').innerHTML = cerita;
-      setInfo(`Cerita dibina. ${siapa} ${buat} 5 ${apa} selama 4 hari. Jumlah 20.`);
-      speak(`Cerita dibina. ${siapa} ${buat} 5 ${apa} selama 4 hari. Jumlah 20.`);
+        const text = `"${s} ${a} 5 ${o} setiap hari. Selepas 4 hari, jumlah kesemuanya ialah 20 ${o}."`;
+        const container = document.getElementById('cd-hasil');
+        container.innerHTML = text + `<br><br><strong>Ayat Matematik:</strong> 4 × 5 = 20`;
+        container.classList.remove('hidden');
+        container.classList.add('animate-[popIn_0.5s_ease]');
+        speak(text);
     }
 
-    /* ====== Aktiviti 4: Pembina Cerita (Bahagi) ====== */
+    /* ====== Aktiviti 4: Pembina Cerita Bahagi ====== */
     function loadPembinaCeritaBahagi(content) {
-      setInfo("Bina cerita anda untuk ayat matematik 12 ÷ 3 = 4.");
+      setInfo("Bina cerita bahagi pula.");
       content.innerHTML = `
-        <h3 class="text-2xl font-bold text-orange-600 mb-6">✍️ Pembina Cerita (Bahagi)</h3>
-        <div class="text-2xl font-bold p-4 bg-orange-100 border-2 border-orange-300 rounded-lg mb-6">
-          Ayat Matematik: <span class="text-orange-800">12 ÷ 3 = 4</span>
-        </div>
-        <div class="text-lg leading-relaxed text-gray-800 mb-6">
-          Bina cerita anda: <br>
-          <select id="cerita-b-siapa" class="story-input">
-            <option value="Nik">Nik</option>
-            <option value="Adam">Adam</option>
-            <option value="Saya">Saya</option>
-          </select>
-          ada <span class="font-bold text-orange-700">12</span>
-          <select id="cerita-b-apa" class="story-input">
-            <option value="biji epal">biji epal</option>
-            <option value="biji guli">biji guli</option>
-            <option value="buku cerita">buku cerita</option>
-          </select>
-          dan mengagihkannya kepada
-          <span class="font-bold text-orange-700">3</span>
-          <select id="cerita-b-kawan" class="story-input">
-            <option value="orang kawan">orang kawan</option>
-            <option value="buah bakul">buah bakul</option>
-            <option value="kumpulan">kumpulan</option>
-          </select>
-          .
-        </div>
-        <button onclick="runBinaCeritaBahagi()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-5 rounded-lg text-lg">
-          Papar Cerita!
-        </button>
-        <div id="cerita-b-hasil" class="mt-6 p-4 bg-orange-50 rounded-lg text-lg font-semibold text-orange-800 min-h-32">
-          Cerita anda akan muncul di sini...
+        <h3 class="text-4xl font-bold text-orange-500 mb-6 text-center">✍️ Cerita Bahagi</h3>
+        <div class="bg-orange-50 rounded-3xl p-8 border-4 border-orange-200 max-w-2xl mx-auto text-center">
+            <div class="bg-white p-4 rounded-xl border-2 border-orange-200 mb-6 inline-block shadow-sm">
+                <span class="text-2xl font-black text-orange-600">12 ÷ 3 = 4</span>
+            </div>
+            
+            <div class="text-xl text-slate-700 leading-loose">
+                <select id="cb-siapa" class="story-select"><option>Cikgu</option><option>Ibu</option><option>Abang</option></select>
+                ada <span class="story-num">12</span>
+                <select id="cb-objek" class="story-select"><option>batang pensel</option><option>keping biskut</option><option>biji gula-gula</option></select>.
+                Dia beri sama rata kepada <span class="story-num">3</span>
+                <select id="cb-penerima" class="story-select"><option>orang murid</option><option>orang anak</option><option>buah bekas</option></select>.
+            </div>
+            
+            <button onclick="runCeritaBahagi()" class="btn-3d bg-orange-500 text-white font-bold py-3 px-8 rounded-xl text-lg mt-8">Bina Cerita</button>
+            
+            <div id="cb-hasil" class="mt-6 p-4 bg-white rounded-xl border-l-4 border-orange-400 text-left text-slate-600 italic min-h-[80px] hidden"></div>
         </div>
       `;
     }
 
-    function runBinaCeritaBahagi() {
-      const siapa = document.getElementById('cerita-b-siapa').value;
-      const apa = document.getElementById('cerita-b-apa').value;
-      const kawan = document.getElementById('cerita-b-kawan').value;
-      
-      const cerita = `Cerita Anda: <br>
-        <strong>${siapa}</strong> ada <strong>12</strong> ${apa} dan mengagihkannya kepada <strong>3</strong> ${kawan} dengan sama rata.
-        <br>Berapakah ${apa} yang setiap ${kawan} dapat?
-        <br>Jawapan: 12 ÷ 3 = 4. Setiap ${kawan} mendapat <strong>4</strong> ${apa}.`;
+    window.runCeritaBahagi = function() {
+        const s = document.getElementById('cb-siapa').value;
+        const o = document.getElementById('cb-objek').value;
+        const p = document.getElementById('cb-penerima').value;
         
-      document.getElementById('cerita-b-hasil').innerHTML = cerita;
-      const msg = `Cerita dibina. ${siapa} ada 12 ${apa}, diagih kepada 3 ${kawan}. Setiap ${kawan} dapat 4.`;
-      setInfo(msg);
-      speak(msg);
+        const text = `"${s} ada 12 ${o}. Dia beri sama rata kepada 3 ${p}. Setiap ${p} mendapat 4 ${o}."`;
+        const container = document.getElementById('cb-hasil');
+        container.innerHTML = text + `<br><br><strong>Ayat Matematik:</strong> 12 ÷ 3 = 4`;
+        container.classList.remove('hidden');
+        container.classList.add('animate-[popIn_0.5s_ease]');
+        speak(text);
     }
 
-    /* ====== Aktiviti 5: Eksplorasi Jadual (Darab) ====== */
+    /* ====== Aktiviti 5: Eksplorasi Jadual (Sifir 7) ====== */
     function loadEksplorasiJadual(content) {
-      jadualHari = 1; // Reset state
-      setInfo("Klik butang 'Tambah Hari' untuk mengisi jadual langkah demi langkah.");
+      jadualHari = 1;
+      setInfo("Fitri petik 7 strawberi sehari. Klik Tambah Hari.");
       content.innerHTML = `
-        <h3 class="text-2xl font-bold text-red-600 mb-6">🍓 Eksplorasi Jadual (Darab)</h3>
-        <p class="text-lg text-gray-700 mb-4">Fitri memetik <strong>7</strong> biji strawberi setiap hari. Mari lihat jumlahnya.</p>
-        <div class="mb-6">
-          <button id="jadual-btn" onclick="isiJadualSeterusnya()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-5 rounded-lg text-lg">
-            Tambah Hari 1
-          </button>
-        </div>
-        <table class="w-full md:w-2/3 mx-auto border-collapse">
-          <thead>
-            <tr class="bg-red-200">
-              <th class="border border-red-400 p-3 text-lg text-red-800">Hari</th>
-              <th class="border border-red-400 p-3 text-lg text-red-800">Bilangan Strawberi</th>
-              <th class="border border-red-400 p-3 text-lg text-red-800">Jumlah</th>
-            </tr>
-          </thead>
-          <tbody id="jadual-darab" class="text-center text-lg font-semibold bg-white">
-            <tr id="jadual-hari-1"><td class="border p-3 h-14" colspan="3">...</td></tr>
-            <tr id="jadual-hari-2"><td class="border p-3 h-14" colspan="3">...</td></tr>
-            <tr id="jadual-hari-3"><td class="border p-3 h-14" colspan="3">...</td></tr>
-            <tr id="jadual-hari-4"><td class="border p-3 h-14" colspan="3">...</td></tr>
-          </tbody>
-        </table>
-        <div id="jadual-rumusan" class="mt-4 text-xl font-bold text-red-900"></div>
-      `;
-    }
+        <h3 class="text-4xl font-bold text-rose-500 mb-6 text-center">🍓 Jadual Sifir 7</h3>
+        <div class="bg-rose-50 rounded-3xl p-8 border-4 border-rose-200 max-w-2xl mx-auto text-center">
+            <p class="text-slate-600 mb-6 text-lg">Fitri memetik <strong>7 strawberi</strong> setiap hari.</p>
+            
+            <button id="jadual-btn" onclick="isiJadual()" class="btn-3d bg-rose-500 text-white font-bold py-2 px-6 rounded-xl text-lg mb-6">
+                ➕ Tambah Hari 1
+            </button>
 
-    function isiJadualSeterusnya() {
-      const BILANGAN_PER_HARI = 7;
-      const MAX_HARI = 4;
-      
-      if (jadualHari > MAX_HARI) return;
-      
-      const jumlah = jadualHari * BILANGAN_PER_HARI;
-      const row = document.getElementById(`jadual-hari-${jadualHari}`);
-      
-      row.innerHTML = `
-        <td class="border p-3">${jadualHari}</td>
-        <td class="border p-3">${BILANGAN_PER_HARI}</td>
-        <td class="border p-3 font-bold text-red-700">${jumlah}</td>
-      `;
-      
-      const msg = `Hari ${jadualHari}, jumlah strawberi ialah ${jumlah}.`;
-      setInfo(msg);
-      speak(msg);
-      
-      jadualHari++;
-      const btn = document.getElementById('jadual-btn');
-      
-      if (jadualHari > MAX_HARI) {
-        btn.textContent = "Selesai!";
-        btn.disabled = true;
-        btn.classList.add('opacity-50');
-        const rumusanMsg = `Selepas 4 hari, jumlahnya ialah 4 x 7 = 28 biji strawberi.`;
-        document.getElementById('jadual-rumusan').textContent = rumusanMsg;
-        setInfo(rumusanMsg);
-        speak(rumusanMsg);
-      } else {
-        btn.textContent = `Tambah Hari ${jadualHari}`;
-      }
-    }
-
-
-    /* ====== Kawalan Umum (Dikekalkan & Dikemas kini) ====== */
-    function clearActivity() {
-      currentActivity = 0;
-      // Teks dikemas kini untuk padan dengan tajuk baru
-      document.getElementById('activity-content').innerHTML = `
-        <div class="text-center py-16">
-          <div class="text-6xl mb-4">➗✖️</div>
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">
-            Kemahiran Pemulihan: Operasi Darab & Bahagi
-          </h2>
-          <p class="text-xl text-gray-600 mb-8">
-            Pilih aktiviti di bawah untuk meneroka konsep darab dan bahagi.
-          </p>
-          <div class="text-4xl">👇</div>
+            <div class="bg-white rounded-xl overflow-hidden border-2 border-rose-200 shadow-sm">
+                <table class="w-full text-lg">
+                    <thead class="bg-rose-100 text-rose-800">
+                        <tr><th class="p-3">Hari</th><th class="p-3">Kira</th><th class="p-3">Jumlah</th></tr>
+                    </thead>
+                    <tbody id="jadual-body">
+                        ${[1,2,3,4].map(i => `<tr id="row-${i}" class="border-t border-slate-100 table-row-hidden"><td class="p-3 text-slate-500">${i}</td><td class="p-3 text-slate-500">${i} × 7</td><td class="p-3 font-bold text-rose-600">${i*7}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div id="jadual-msg" class="mt-4 font-bold text-rose-700 min-h-[30px]"></div>
         </div>
       `;
-      setInfo("Pilih aktiviti untuk mula belajar darab dan bahagi!");
-    }
-    
-    function nextActivity() {
-      if (currentActivity === 0) return loadActivity(1);
-      if (currentActivity < 5) return loadActivity(currentActivity + 1);
-      return loadActivity(1); // Balik ke aktiviti 1 selepas 5
     }
 
-    // Kekalkan TTS resume (Dikekalkan)
+    window.isiJadual = function() {
+        if (jadualHari > 4) return;
+        
+        const row = document.getElementById(`row-${jadualHari}`);
+        row.classList.remove('table-row-hidden');
+        row.classList.add('table-row-visible');
+        
+        const total = jadualHari * 7;
+        const msg = `Hari ke-${jadualHari}: ${jadualHari} darab 7 ialah ${total}.`;
+        document.getElementById('jadual-msg').textContent = msg;
+        speak(msg);
+        
+        jadualHari++;
+        const btn = document.getElementById('jadual-btn');
+        
+        if (jadualHari > 4) {
+            btn.disabled = true;
+            btn.textContent = "Selesai! ✅";
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            triggerWin();
+        } else {
+            btn.textContent = `➕ Tambah Hari ${jadualHari}`;
+        }
+    }
+
+    // Keep TTS alive
     if ('speechSynthesis' in window) {
       setInterval(() => { if (window.speechSynthesis.paused) window.speechSynthesis.resume(); }, 1000);
     }
